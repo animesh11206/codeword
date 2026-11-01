@@ -6,12 +6,12 @@
 
 namespace {
 
-std::string decode_utf16_bytes(const std::string& value, bool big_endian, std::size_t start_offset) {
+std::string decode_utf16_bytes(const std::string& raw, bool big_endian, std::size_t start_offset) {
     std::vector<std::uint16_t> units;
 
-    for (std::size_t i = start_offset; i + 1 < value.size(); i += 2) {
-        unsigned char b0 = static_cast<unsigned char>(value[i]);
-        unsigned char b1 = static_cast<unsigned char>(value[i + 1]);
+    for (std::size_t i = start_offset; i + 1 < raw.size(); i += 2) {
+        unsigned char b0 = static_cast<unsigned char>(raw[i]);
+        unsigned char b1 = static_cast<unsigned char>(raw[i + 1]);
 
         std::uint16_t unit = big_endian
             ? static_cast<std::uint16_t>((b0 << 8) | b1)
@@ -25,30 +25,32 @@ std::string decode_utf16_bytes(const std::string& value, bool big_endian, std::s
 
 } // namespace
 
-// Decodes UTF-16 bytes into UTF-8, inspecting the BOM if present (defaults to little-endian).
+// Decodes hex-rendered UTF-16 wire bytes into UTF-8, inspecting the BOM if present (defaults to LE).
 std::string utf16_decode(const std::string& value) {
-    if (value.size() >= 2) {
-        unsigned char b0 = static_cast<unsigned char>(value[0]);
-        unsigned char b1 = static_cast<unsigned char>(value[1]);
+    std::string raw = decoding_utils::hex_to_bytes(value);
+    if (raw.size() >= 2) {
+        unsigned char b0 = static_cast<unsigned char>(raw[0]);
+        unsigned char b1 = static_cast<unsigned char>(raw[1]);
 
         if (b0 == 0xFE && b1 == 0xFF) {
-            return decode_utf16_bytes(value, true, 2);
+            return decode_utf16_bytes(raw, true, 2);
         }
         if (b0 == 0xFF && b1 == 0xFE) {
-            return decode_utf16_bytes(value, false, 2);
+            return decode_utf16_bytes(raw, false, 2);
         }
     }
 
-    return decode_utf16_bytes(value, false, 0);
+    return decode_utf16_bytes(raw, false, 0);
 }
 
-// Decodes big-endian UTF-16 bytes into UTF-8.
+// Decodes hex-rendered big-endian UTF-16 wire bytes into UTF-8.
 std::string utf16be_decode(const std::string& value) {
-    return decode_utf16_bytes(value, true, 0);
+    std::string raw = decoding_utils::hex_to_bytes(value);
+    return decode_utf16_bytes(raw, true, 0);
 }
 
-// Decodes little-endian UTF-16 bytes into UTF-8.
+// Decodes hex-rendered little-endian UTF-16 wire bytes into UTF-8.
 std::string utf16le_decode(const std::string& value) {
-    return decode_utf16_bytes(value, false, 0);
+    std::string raw = decoding_utils::hex_to_bytes(value);
+    return decode_utf16_bytes(raw, false, 0);
 }
-

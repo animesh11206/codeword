@@ -3,15 +3,17 @@
 #include "utf8_decode.h"
 #include "decoding_utils.h"
 
-// Validates and normalizes a UTF-8 byte stream (replacing malformed sequences with U+FFFD).
+// Decodes hex-rendered UTF-8 wire bytes and normalizes the UTF-8 byte stream
+// (replacing malformed sequences with U+FFFD).
 std::string utf8_decode(const std::string& value) {
     static constexpr std::uint32_t min_value[] = {0x0, 0x80, 0x800, 0x10000};
 
+    std::string raw = decoding_utils::hex_to_bytes(value);
     std::string decoded;
     std::size_t i = 0;
 
-    while (i < value.size()) {
-        unsigned char lead = static_cast<unsigned char>(value[i]);
+    while (i < raw.size()) {
+        unsigned char lead = static_cast<unsigned char>(raw[i]);
         std::uint32_t code_point = 0;
         std::size_t extra = 0;
 
@@ -25,7 +27,7 @@ std::string utf8_decode(const std::string& value) {
             continue;
         }
 
-        if (i + extra >= value.size()) {
+        if (i + extra >= raw.size()) {
             decoding_utils::append_utf8(decoded, 0xFFFD);
             ++i;
             continue;
@@ -33,7 +35,7 @@ std::string utf8_decode(const std::string& value) {
 
         bool valid = true;
         for (std::size_t j = 1; j <= extra; ++j) {
-            unsigned char next = static_cast<unsigned char>(value[i + j]);
+            unsigned char next = static_cast<unsigned char>(raw[i + j]);
             if ((next & 0xC0) != 0x80) {
                 valid = false;
                 break;
@@ -54,4 +56,3 @@ std::string utf8_decode(const std::string& value) {
 
     return decoded;
 }
-

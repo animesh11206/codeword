@@ -11,7 +11,13 @@ bool Input_File_Validation (const std::string& input_file) {
     try {
 
         std::error_code error_code;
-        
+        std::filesystem::path file_path(input_file);
+
+        if (file_path.extension() != ".txt") {
+            std::cerr << "Error: Input file '" << input_file << "' must have a '.txt' extension." << std::endl;
+            return false;
+        }
+
         if (!std::filesystem::is_regular_file(input_file, error_code)) {
 
             if (error_code) {

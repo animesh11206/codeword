@@ -5,6 +5,7 @@
 
 extern bool append_output;
 extern bool output_file_creation;
+extern std::string input_file;
 extern std::string output_file;
 
 bool Output_File_Validation(const std::string& output_file);

@@ -38,7 +38,13 @@ bool Output_File_Creation(const std::string& input_file, const std::string opera
             for (int i = 0; i < 5; i++) {
 
                 if (!operations[i].empty()) {
-                    file_name += operations[i] + "_";
+                    std::string op_name = operations[i];
+                    while (!op_name.empty() && op_name.front() == '-') {
+                        op_name.erase(0, 1);
+                    }
+                    if (!op_name.empty()) {
+                        file_name += op_name + "_";
+                    }
                 }
             }
 

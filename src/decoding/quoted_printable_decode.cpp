@@ -8,8 +8,13 @@ std::string quoted_printable_decode(const std::string& value) {
 
     for (std::size_t i = 0; i < value.size(); ++i) {
         if (value[i] == '=') {
+            // Trailing '=' at the end of a line is a soft line break whose newline was stripped
+            if (i + 1 == value.size()) {
+                break;
+            }
+
             // Soft line break: =\r\n or =\n
-            if (i + 1 < value.size() && value[i + 1] == '\r') {
+            if (value[i + 1] == '\r') {
                 if (i + 2 < value.size() && value[i + 2] == '\n') {
                     i += 2;
                 }
@@ -18,7 +23,7 @@ std::string quoted_printable_decode(const std::string& value) {
                 }
                 continue;
             }
-            if (i + 1 < value.size() && value[i + 1] == '\n') {
+            if (value[i + 1] == '\n') {
                 ++i;
                 continue;
             }
@@ -40,4 +45,3 @@ std::string quoted_printable_decode(const std::string& value) {
 
     return decoded;
 }
-

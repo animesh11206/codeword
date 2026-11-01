@@ -1,5 +1,7 @@
 #include <cstdint>
 #include <cstring>
+#include <limits>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include "scrypt_hash.h"
@@ -65,11 +67,11 @@ void salsa20_8(unsigned char b[64]) {
 
 void block_mix(const unsigned char* b, unsigned char* y, std::uint32_t r) {
     unsigned char x[64];
-    std::memcpy(x, b + (2 * r - 1) * 64, 64);
+    std::memcpy(x, b + (2 * static_cast<std::size_t>(r) - 1) * 64, 64);
 
     for (std::uint32_t i = 0; i < 2 * r; ++i) {
         for (int j = 0; j < 64; ++j) {
-            x[j] ^= b[i * 64 + j];
+            x[j] ^= b[static_cast<std::size_t>(i) * 64 + j];
         }
         salsa20_8(x);
         std::size_t dest = (i % 2 == 0) ? (i / 2) : (r + i / 2);
@@ -78,20 +80,20 @@ void block_mix(const unsigned char* b, unsigned char* y, std::uint32_t r) {
 }
 
 void romix(unsigned char* b, std::uint32_t r, std::uint32_t n) {
-    std::size_t block_size = 128 * r;
-    std::vector<unsigned char> v(block_size * n);
+    std::size_t block_size = 128 * static_cast<std::size_t>(r);
+    std::vector<unsigned char> v(block_size * static_cast<std::size_t>(n));
     std::vector<unsigned char> y(block_size);
 
     for (std::uint32_t i = 0; i < n; ++i) {
-        std::memcpy(&v[i * block_size], b, block_size);
+        std::memcpy(&v[static_cast<std::size_t>(i) * block_size], b, block_size);
         block_mix(b, y.data(), r);
         std::memcpy(b, y.data(), block_size);
     }
 
     for (std::uint32_t i = 0; i < n; ++i) {
-        std::uint64_t j = hashing_utils::load_le64(b + (2 * r - 1) * 64) & (n - 1);
+        std::uint64_t j = hashing_utils::load_le64(b + (2 * static_cast<std::size_t>(r) - 1) * 64) & (n - 1);
         for (std::size_t k = 0; k < block_size; ++k) {
-            b[k] ^= v[j * block_size + k];
+            b[k] ^= v[static_cast<std::size_t>(j) * block_size + k];
         }
         block_mix(b, y.data(), r);
         std::memcpy(b, y.data(), block_size);
@@ -100,14 +102,31 @@ void romix(unsigned char* b, std::uint32_t r, std::uint32_t n) {
 
 } // namespace
 
-// RFC 7914 scrypt key derivation (default salt = "salt", N = 16, r = 1, p = 1, dkLen = 32).
+// RFC 7914 scrypt key derivation (default salt = "salt", N = 16384, r = 8, p = 1, dkLen = 32).
 std::string scrypt_hash(const std::string& value, const std::string& salt,
                         std::uint32_t n, std::uint32_t r, std::uint32_t p, std::size_t dk_len) {
-    std::size_t block_size = 128 * r;
-    auto b = hashing_utils::pbkdf2_raw(hashing_utils::sha256_raw, 64, 32, value, salt, 1, p * block_size);
+    if (r == 0 || p == 0 || dk_len == 0 || n < 2 || (n & (n - 1)) != 0) {
+        throw std::invalid_argument("Invalid scrypt parameters: N must be a power of 2 > 1, and r, p, dk_len must be > 0.");
+    }
+    if (static_cast<std::uint64_t>(r) * static_cast<std::uint64_t>(p) >= (1ULL << 30)) {
+        throw std::invalid_argument("scrypt parameters r * p exceed RFC 7914 limit.");
+    }
+    if (r == 1 && n >= 65536) {
+        throw std::invalid_argument("scrypt parameter N must be < 2^(16 * r).");
+    }
+
+    std::size_t block_size = 128 * static_cast<std::size_t>(r);
+    if (block_size > std::numeric_limits<std::size_t>::max() / n ||
+        block_size > std::numeric_limits<std::size_t>::max() / p) {
+        throw std::invalid_argument("scrypt memory allocation size overflow.");
+    }
+
+    auto b = hashing_utils::pbkdf2_raw(
+        hashing_utils::sha256_raw, 64, 32, value, salt, 1,
+        static_cast<std::size_t>(p) * block_size);
 
     for (std::uint32_t i = 0; i < p; ++i) {
-        romix(&b[i * block_size], r, n);
+        romix(&b[static_cast<std::size_t>(i) * block_size], r, n);
     }
 
     std::string b_str(reinterpret_cast<const char*>(b.data()), b.size());
@@ -116,6 +135,5 @@ std::string scrypt_hash(const std::string& value, const std::string& salt,
 }
 
 std::string scrypt_hash(const std::string& value) {
-    return scrypt_hash(value, "salt", 16, 1, 1, 32);
+    return scrypt_hash(value, "salt", 16384, 8, 1, 32);
 }
-
