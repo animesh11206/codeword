@@ -16,13 +16,14 @@
 - [Key Features](#key-features)
 - [Architecture & Workflow](#architecture--workflow)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Building from Source](#building-from-source)
+  - [Option 1: Quick Install (Pre-Built Binaries)](#option-1-quick-install-pre-built-binaries)
+  - [Option 2: Build from Source with CMake](#option-2-build-from-source-with-cmake)
+  - [Option 3: Build Directly with `g++`](#option-3-build-directly-with-g)
 - [Command-Line Interface](#command-line-interface)
   - [Synopsis](#synopsis)
   - [Utility & Operation Flags](#utility--operation-flags)
   - [Execution Rules & Validation](#execution-rules--validation)
-  - [Output Collision Handling](#output-collision-handling)
+  - [Output File & Collision Handling](#output-file--collision-handling)
 - [Supported Algorithms](#supported-algorithms)
   - [Encoding & Decoding Flags (36)](#encoding--decoding-flags-36)
   - [Hashing Flags (49)](#hashing-flags-49)
@@ -70,14 +71,52 @@ flowchart LR
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: Quick Install (Pre-Built Binaries)
 
-- A **C++17** compliant compiler:
-  - **GCC** (`g++` 8 or newer)
-  - **Clang** (`clang++` 7 or newer)
-  - **MSVC** (Visual Studio 2017 15.7 or newer)
+You can download ready-to-run binaries for **Windows**, **Linux**, and **macOS** directly from the [**GitHub Releases**](https://github.com/animesh11206/codeword/releases/latest) page, or use the one-line terminal commands below:
 
-### Building from Source
+#### Linux (x86_64)
+```bash
+curl -fL https://github.com/animesh11206/codeword/releases/latest/download/codeword-linux-x64 -o codeword && chmod +x codeword
+./codeword -v
+```
+*(Optional — install globally so you can run `codeword` from any folder):*
+```bash
+sudo mv codeword /usr/local/bin/codeword
+```
+
+#### macOS (Apple Silicon / ARM64)
+```bash
+curl -fL https://github.com/animesh11206/codeword/releases/latest/download/codeword-macos-arm64 -o codeword && chmod +x codeword
+./codeword -v
+```
+
+#### Windows (PowerShell)
+```powershell
+Invoke-WebRequest -Uri "https://github.com/animesh11206/codeword/releases/latest/download/codeword-windows-x64.exe" -OutFile "codeword.exe"
+.\codeword.exe -v
+```
+
+---
+
+### Option 2: Build from Source with CMake
+
+Requires **CMake 3.15+** and any **C++17** compiler (`g++`, `clang++`, or Visual Studio `MSVC`).
+
+```bash
+git clone https://github.com/animesh11206/codeword.git
+cd codeword
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel
+```
+
+The compiled executable will be located in `build/codeword` (or `build/codeword.exe` on Windows).
+
+---
+
+### Option 3: Build Directly with `g++`
+
+If you don't have CMake installed, you can compile directly with `g++`:
 
 #### Linux / macOS (Bash)
 
@@ -276,34 +315,76 @@ All 49 flags below are supported under `--hashing` (via `hash()`):
 
 ## Usage Examples
 
-### 1. Single-Stage Encoding
-Encode every word in `wordlist.txt` into Base64 and save to `base64_out.txt`:
+> **Note:** On Linux/macOS use `./codeword` (or `codeword` if installed in `/usr/local/bin`). On Windows PowerShell use `.\codeword.exe`.
+> If `-o <output.txt>` is omitted, output is automatically saved inside `./Codeword/<flags>_<wordlist_name>`.
+
+### 1. Hashing `rockyou.txt` (SHA-256 / NTLM / MD5)
+Generate SHA-256 hashes for `/usr/share/wordlists/rockyou.txt` (automatically writes to `./Codeword/sha256_rockyou.txt`):
 ```bash
-codeword -w wordlist.txt --encoding -base64 -o base64_out.txt
+./codeword -w /usr/share/wordlists/rockyou.txt --hashing -sha256
 ```
 
-### 2. Multi-Stage Chained Encoding (Up to 5 Stages)
-Chain **ROT13** $\rightarrow$ **Hex** $\rightarrow$ **Base64** $\rightarrow$ **URL-All** in a single command:
+Or save to a custom output file with `-o`:
 ```bash
-codeword -w payloads.txt --encoding -rot13 -hex -base64 -url_all -o obfuscated.txt
+./codeword -w /usr/share/wordlists/rockyou.txt --hashing -ntlm -o rockyou_ntlm.txt
 ```
 
-### 3. Single-Stage Decoding
-Decode a hexadecimal wordlist back to raw strings:
-```bash
-codeword -w hex_dump.txt --decoding -hex -o decoded.txt
+**Sample Input (`rockyou.txt`):**
+```text
+123456
+password
+iloveyou
+```
+**Sample Output (`./Codeword/sha256_rockyou.txt`):**
+```text
+8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+e4ad93ca07acb8d908a3aa41e920ea4f4ef4f26e7f86cf8291c5db289780a5ae
 ```
 
-### 4. Password & Database Hash Generation
-Generate Windows NTLM hashes for a password list:
+---
+
+### 2. Single-Stage Encoding
+Encode every entry in `wordlist.txt` into Base64:
 ```bash
-codeword -w passwords.txt --hashing -ntlm -o ntlm_hashes.txt
+./codeword -w wordlist.txt --encoding -base64 -o base64_out.txt
 ```
 
-### 5. Multi-Stage Chained Hashing
-Compute nested `SHA-256(MD5(password))` digests for a wordlist:
+**Sample Input (`wordlist.txt`):**
+```text
+admin
+P@ssw0rd!
+<script>alert(1)</script>
+```
+**Sample Output (`base64_out.txt`):**
+```text
+YWRtaW4=
+UEBzc3cwcmQh
+PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
+```
+
+---
+
+### 3. Multi-Stage Chained Encoding (Up to 5 Stages)
+Chain **ROT13** $\rightarrow$ **Hex** $\rightarrow$ **Base64** $\rightarrow$ **URL-All** in a single pass:
 ```bash
-codeword -w passwords.txt --hashing -md5 -sha256 -o md5_sha256.txt
+./codeword -w payloads.txt --encoding -rot13 -hex -base64 -url_all -o obfuscated.txt
+```
+
+---
+
+### 4. Single-Stage Decoding
+Decode a Base64 or Hex-encoded wordlist back to raw plaintext:
+```bash
+./codeword -w base64_out.txt --decoding -base64 -o decoded.txt
+```
+
+---
+
+### 5. Multi-Stage Chained Hashing (Up to 5 Stages)
+Compute nested `SHA-256(SHA-1(MD5(password)))` digests for a wordlist:
+```bash
+./codeword -w /usr/share/wordlists/rockyou.txt --hashing -md5 -sha1 -sha256 -o multi_hash.txt
 ```
 
 ---
@@ -312,6 +393,9 @@ codeword -w passwords.txt --hashing -md5 -sha256 -o md5_sha256.txt
 
 ```text
 codeword/
+├── .github/
+│   └── workflows/
+│       └── release.yml               # Automated CI/CD builds for Windows, Linux & macOS
 ├── include/
 │   ├── command_validation.h          # CLI argument & flag validation declarations
 │   ├── display_help.h                # CLI banner, usage, and help page declarations
@@ -344,6 +428,7 @@ codeword/
 │   ├── encoding/                     # 34 self-contained C++17 encoder implementations
 │   ├── decoding/                     # 34 self-contained C++17 decoder implementations
 │   └── hashing/                      # 49 self-contained C++17 hash implementations
+├── CMakeLists.txt                    # Cross-platform CMake build configuration
 └── README.md
 ```
 
