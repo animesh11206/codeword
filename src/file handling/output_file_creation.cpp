@@ -12,7 +12,7 @@ bool Output_File_Creation(const std::string& input_file, const std::string opera
     try {
         std::error_code error_code;
         std::filesystem::path current_dir = std::filesystem::current_path();
-        std::filesystem::path created_dir = current_dir / "Wordcoder";
+        std::filesystem::path created_dir = current_dir / "Codeword";
         
         bool condition = false;
 

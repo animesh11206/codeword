@@ -62,7 +62,7 @@ void display_help(const std::string& prog_name) {
         << "  -w, --wordlist <path>     [MANDATORY] Path to input wordlist (must exist,\n"
         << "                            be a regular file, and be non-empty).\n"
         << "  -o, --output <path>       [OPTIONAL]  Path to output file. If omitted,\n"
-        << "                            automatically writes to ./Wordcoder/<flags>_<name>\n"
+        << "                            automatically writes to ./Codeword/<flags>_<name>\n"
         << "                            with automatic collision numbering (1), (2), etc.\n"
         << "\nOPERATION MODES (Specify exactly one)\n"
         << "  --encoding <flags...>     Encode each wordlist entry using 1 to 5 chained\n"

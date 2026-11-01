@@ -160,12 +160,12 @@ codeword -v | --version
 ### Output File & Collision Handling
 
 - **Automatic Output (`-o` omitted)**:
-  - Creates a `Wordcoder/` directory in the current working directory if it does not already exist.
-  - Generates an output filename prefixed with the active operation sub-flags: `Wordcoder/<flag1>_..._<input_filename>`.
+  - Creates a `Codeword/` directory in the current working directory if it does not already exist.
+  - Generates an output filename prefixed with the active operation sub-flags: `Codeword/<flag1>_..._<input_filename>`.
   - If a file with that name already exists, automatically suffixes `(1)`, `(2)`, etc. before the file extension via `File_Collision_Handling`.
 - **Custom Output (`-o <path>` specified)**:
   - If the target file does not exist, prompts whether to create the file (and any missing parent directories) (`y/n`).
-  - If the target file exists and is non-empty, prompts whether to append to it (`y/n`) or create a new auto-named file inside `Wordcoder/` (`y/n`).
+  - If the target file exists and is non-empty, prompts whether to append to it (`y/n`) or create a new auto-named file inside `Codeword/` (`y/n`).
 
 ---
 
