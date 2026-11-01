@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (arg == "-v" || arg == "--version") {
-            std::cout << VERSION << '\n';
+            display_version();
             return 0;
         }
     }
@@ -312,7 +312,13 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    std::ifstream in_stream(input_file);
+    std::error_code eq_ec;
+    if (std::filesystem::equivalent(input_file, output_file, eq_ec)) {
+        std::cerr << "Error: Output file '" << output_file << "' cannot be the same as input file '" << input_file << "'." << std::endl;
+        return 1;
+    }
+
+    std::ifstream in_stream(input_file, std::ios::in | std::ios::binary);
     if (!in_stream.is_open()) {
         std::cerr << "Error: Unable to open input file '" << input_file << "'." << std::endl;
         return 1;
@@ -320,9 +326,9 @@ int main(int argc, char* argv[]) {
 
     std::ofstream out_stream;
     if (append_output) {
-        out_stream.open(output_file, std::ios::app);
+        out_stream.open(output_file, std::ios::out | std::ios::binary | std::ios::app);
     } else {
-        out_stream.open(output_file);
+        out_stream.open(output_file, std::ios::out | std::ios::binary | std::ios::trunc);
     }
 
     if (!out_stream.is_open()) {

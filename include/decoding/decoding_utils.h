@@ -71,6 +71,31 @@ inline int hex_value(char c) {
     return -1;
 }
 
+// Decodes a hexadecimal string (ignoring optional whitespace) into raw bytes.
+inline std::string hex_to_bytes(const std::string& value) {
+    std::string decoded;
+    decoded.reserve(value.size() / 2);
+
+    int high = -1;
+    for (char c : value) {
+        if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+            continue;
+        }
+        int digit = hex_value(c);
+        if (digit < 0) {
+            continue;
+        }
+        if (high < 0) {
+            high = digit;
+        } else {
+            decoded += static_cast<char>((high << 4) | digit);
+            high = -1;
+        }
+    }
+
+    return decoded;
+}
+
 // Decodes a big-integer base-N string (Base58 / Base62) back into raw bytes.
 inline std::string decode_big_base(const std::string& value, const char* alphabet, unsigned base) {
     std::size_t leading_zeros = 0;

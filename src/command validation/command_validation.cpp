@@ -5,6 +5,19 @@
 #include "input_file_validation.h"
 #include "output_file_validation.h"
 
+namespace {
+
+bool is_known_flag(const std::string& token) {
+    for (int j = 0; j < NUM_ALL_FLAGS; j++) {
+        if (token == ALL_FLAGS[j]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
+
 bool Command_Validation(int argc, char* argv[]) {
 
     int operation_count = 0;
@@ -54,7 +67,7 @@ bool Command_Validation(int argc, char* argv[]) {
             wordlist_flag_used = true;
             accepting_operation_flags = false;
 
-            if (i + 1 >= argc || argv[i + 1][0] == '-') {
+            if (i + 1 >= argc || argv[i + 1][0] == '\0' || is_known_flag(argv[i + 1])) {
                 std::cerr << "Error: Missing file path for '" << arg << "'." << std::endl;
                 return false;
             }
@@ -75,7 +88,7 @@ bool Command_Validation(int argc, char* argv[]) {
             output_flag_used = true;
             accepting_operation_flags = false;
 
-            if (i + 1 >= argc || argv[i + 1][0] == '-') {
+            if (i + 1 >= argc || argv[i + 1][0] == '\0' || is_known_flag(argv[i + 1])) {
                 std::cerr << "Error: Missing file path for '" << arg << "'." << std::endl;
                 return false;
             }

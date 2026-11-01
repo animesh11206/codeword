@@ -118,6 +118,20 @@ inline std::string to_hex(std::uint32_t value, std::size_t min_width, bool upper
     return hex;
 }
 
+// Formats a raw byte string as lowercase hexadecimal (2 hex chars per byte).
+inline std::string bytes_to_hex(const std::string& bytes, bool uppercase = false) {
+    const char* digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+    std::string hex;
+    hex.reserve(bytes.size() * 2);
+
+    for (unsigned char b : bytes) {
+        hex += digits[(b >> 4) & 0x0F];
+        hex += digits[b & 0x0F];
+    }
+
+    return hex;
+}
+
 // Treats the input bytes as one big-endian number and converts it to the given base.
 // Leading zero bytes are preserved as leading alphabet[0] characters (base58/base62 style).
 inline std::string encode_big_base(const std::string& value, const char* alphabet, unsigned base) {

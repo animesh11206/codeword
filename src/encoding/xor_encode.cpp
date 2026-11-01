@@ -1,23 +1,23 @@
 #include <string>
 #include "xor_encode.h"
+#include "encoding_utils.h"
 
-// XORs every byte with the repeating key. Applying it twice with the same key restores the input.
+// XORs every byte with the repeating key and returns lowercase hex wire bytes.
 std::string xor_encode(const std::string& value, const std::string& key) {
     if (key.empty()) {
-        return value;
+        return encoding_utils::bytes_to_hex(value);
     }
 
-    std::string encoded(value.size(), '\0');
+    std::string xored(value.size(), '\0');
 
     for (std::size_t i = 0; i < value.size(); ++i) {
-        encoded[i] = static_cast<char>(value[i] ^ key[i % key.size()]);
+        xored[i] = static_cast<char>(value[i] ^ key[i % key.size()]);
     }
 
-    return encoded;
+    return encoding_utils::bytes_to_hex(xored);
 }
 
-// XORs with the single-byte DEFAULT_XOR_KEY
+// XORs with the single-byte DEFAULT_XOR_KEY (0x5A) and returns lowercase hex.
 std::string xor_encode(const std::string& value) {
     return xor_encode(value, std::string(1, static_cast<char>(DEFAULT_XOR_KEY)));
 }
-

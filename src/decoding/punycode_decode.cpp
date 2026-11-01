@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <vector>
 #include "punycode_decode.h"
@@ -14,6 +15,7 @@ constexpr std::uint32_t SKEW = 38;
 constexpr std::uint32_t DAMP = 700;
 constexpr std::uint32_t INITIAL_BIAS = 72;
 constexpr std::uint32_t INITIAL_N = 128;
+constexpr std::uint32_t MAX_UINT32 = std::numeric_limits<std::uint32_t>::max();
 
 std::uint32_t decode_digit(char c) {
     if (c >= 'a' && c <= 'z') return static_cast<std::uint32_t>(c - 'a');
@@ -36,6 +38,7 @@ std::uint32_t adapt(std::uint32_t delta, std::uint32_t num_points, bool first_ti
 }
 
 // Decodes a single RFC 3492 punycode payload (after stripping "xn--").
+// Returns empty string if the punycode delta sequence is malformed or overflows.
 std::string decode_label(const std::string& input) {
     std::vector<std::uint32_t> output;
 
@@ -44,7 +47,11 @@ std::string decode_label(const std::string& input) {
 
     if (delim != std::string::npos) {
         for (std::size_t j = 0; j < delim; ++j) {
-            output.push_back(static_cast<unsigned char>(input[j]));
+            unsigned char ch = static_cast<unsigned char>(input[j]);
+            if (ch >= 0x80) {
+                return "";
+            }
+            output.push_back(ch);
         }
         pos = delim + 1;
     }
@@ -59,24 +66,39 @@ std::string decode_label(const std::string& input) {
 
         for (std::uint32_t k = BASE;; k += BASE) {
             if (pos >= input.size()) {
-                break;
+                return "";
             }
             std::uint32_t digit = decode_digit(input[pos++]);
             if (digit >= BASE) {
-                break;
+                return "";
             }
 
+            if (digit > (MAX_UINT32 - i) / w) {
+                return "";
+            }
             i += digit * w;
+
             std::uint32_t t = k <= bias ? T_MIN : (k >= bias + T_MAX ? T_MAX : k - bias);
             if (digit < t) {
                 break;
+            }
+
+            if (w > MAX_UINT32 / (BASE - t)) {
+                return "";
             }
             w *= (BASE - t);
         }
 
         std::uint32_t out_len = static_cast<std::uint32_t>(output.size() + 1);
         bias = adapt(i - old_i, out_len, old_i == 0);
+
+        if (i / out_len > MAX_UINT32 - n) {
+            return "";
+        }
         n += i / out_len;
+        if (n > 0x10FFFF || (n >= 0xD800 && n <= 0xDFFF)) {
+            return "";
+        }
         i %= out_len;
 
         output.insert(output.begin() + i, n);
@@ -122,4 +144,3 @@ std::string punycode_decode(const std::string& value) {
 
     return decoded;
 }
-

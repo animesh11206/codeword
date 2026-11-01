@@ -2,8 +2,8 @@
 #include <string>
 #include "uuencode_encode.h"
 
-// Encodes the data lines of a uuencoded block (without the "begin"/"end" lines).
-// Each line holds up to 45 input bytes, prefixed with its length character.
+// Encodes input into uuencoded chunks on a single line (without "begin"/"end" or embedded newlines).
+// Each chunk holds up to 45 input bytes, prefixed with its length character.
 std::string uuencode_encode(const std::string& value) {
     auto encode_char = [](unsigned bits) {
         return bits == 0 ? '`' : static_cast<char>(bits + 32);
@@ -13,10 +13,6 @@ std::string uuencode_encode(const std::string& value) {
 
     for (std::size_t i = 0; i < value.size(); i += 45) {
         std::size_t line_length = std::min<std::size_t>(45, value.size() - i);
-
-        if (!encoded.empty()) {
-            encoded += '\n';
-        }
 
         encoded += encode_char(static_cast<unsigned>(line_length));
 

@@ -6,7 +6,7 @@
 namespace {
 
 std::string encode_utf32(const std::string& value, bool big_endian, bool with_bom) {
-    std::string encoded;
+    std::string raw_bytes;
 
     auto append_unit = [&](std::uint32_t unit) {
         char bytes[4] = {
@@ -17,11 +17,11 @@ std::string encode_utf32(const std::string& value, bool big_endian, bool with_bo
         };
 
         if (big_endian) {
-            encoded.append(bytes, 4);
+            raw_bytes.append(bytes, 4);
         }
         else {
             for (int i = 3; i >= 0; --i) {
-                encoded += bytes[i];
+                raw_bytes += bytes[i];
             }
         }
     };
@@ -34,23 +34,22 @@ std::string encode_utf32(const std::string& value, bool big_endian, bool with_bo
         append_unit(code_point);
     }
 
-    return encoded;
+    return encoding_utils::bytes_to_hex(raw_bytes);
 }
 
 } // namespace
 
-// UTF-32 with a byte order mark, little-endian
+// UTF-32 with a byte order mark, little-endian (hex-rendered wire bytes)
 std::string utf32_encode(const std::string& value) {
     return encode_utf32(value, false, true);
 }
 
-// UTF-32 big-endian, no byte order mark
+// UTF-32 big-endian, no byte order mark (hex-rendered wire bytes)
 std::string utf32be_encode(const std::string& value) {
     return encode_utf32(value, true, false);
 }
 
-// UTF-32 little-endian, no byte order mark
+// UTF-32 little-endian, no byte order mark (hex-rendered wire bytes)
 std::string utf32le_encode(const std::string& value) {
     return encode_utf32(value, false, false);
 }
-

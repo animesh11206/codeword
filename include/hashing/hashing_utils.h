@@ -102,28 +102,45 @@ inline std::string u64_to_hex(std::uint64_t v, bool uppercase = false) {
 }
 
 // Encodes ASCII/UTF-8 string to UTF-16LE bytes (used by NTLM and MSSQL hashes).
+// Malformed, truncated, overlong, surrogate, or out-of-range sequences are replaced with U+FFFD.
 inline std::string to_utf16le_bytes(const std::string& value) {
+    static constexpr std::uint32_t min_value[] = {0x0, 0x80, 0x800, 0x10000};
+
     std::string out;
     std::size_t i = 0;
     while (i < value.size()) {
         unsigned char lead = static_cast<unsigned char>(value[i]);
         std::uint32_t cp = 0;
         std::size_t extra = 0;
+        bool valid = true;
+
         if (lead < 0x80)                { cp = lead;        extra = 0; }
         else if ((lead & 0xE0) == 0xC0) { cp = lead & 0x1F; extra = 1; }
         else if ((lead & 0xF0) == 0xE0) { cp = lead & 0x0F; extra = 2; }
         else if ((lead & 0xF8) == 0xF0) { cp = lead & 0x07; extra = 3; }
-        else { cp = 0xFFFD; extra = 0; }
+        else { valid = false; }
 
-        if (i + extra >= value.size()) {
+        if (!valid || i + extra >= value.size()) {
             cp = 0xFFFD;
-            extra = 0;
+            ++i;
         } else {
             for (std::size_t j = 1; j <= extra; ++j) {
-                cp = (cp << 6) | (static_cast<unsigned char>(value[i + j]) & 0x3F);
+                unsigned char next = static_cast<unsigned char>(value[i + j]);
+                if ((next & 0xC0) != 0x80) {
+                    valid = false;
+                    break;
+                }
+                cp = (cp << 6) | (next & 0x3F);
+            }
+
+            if (!valid || cp < min_value[extra] || cp > 0x10FFFF ||
+                (cp >= 0xD800 && cp <= 0xDFFF)) {
+                cp = 0xFFFD;
+                ++i;
+            } else {
+                i += extra + 1;
             }
         }
-        i += extra + 1;
 
         if (cp >= 0x10000) {
             cp -= 0x10000;

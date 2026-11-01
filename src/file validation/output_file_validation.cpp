@@ -12,6 +12,12 @@ bool Output_File_Validation (const std::string& output_file) {
 
         std::error_code error_code;
         std::string input;
+        std::filesystem::path output_path(output_file);
+
+        if (output_path.extension() != ".txt") {
+            std::cerr << "Error: Output file '" << output_file << "' must have a '.txt' extension." << std::endl;
+            return false;
+        }
 
         if (!std::filesystem::is_regular_file(output_file, error_code)) {
 
@@ -67,6 +73,15 @@ bool Output_File_Validation (const std::string& output_file) {
         if (!file.is_open()) {
             std::cerr << "Error: Unable to open output file '" << output_file << "'." << std::endl;
             return false;
+        }
+
+        if (!::input_file.empty()) {
+            std::error_code eq_error;
+            if (std::filesystem::equivalent(::input_file, output_file, eq_error)) {
+                std::cerr << "Error: Output file '" << output_file
+                          << "' cannot be the same as input file '" << ::input_file << "'." << std::endl;
+                return false;
+            }
         }
 
         if (file.peek() != std::ifstream::traits_type::eof()) {
