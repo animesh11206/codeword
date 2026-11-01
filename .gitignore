@@ -1,0 +1,83 @@
+# ==============================================================================
+# Build Directories
+# ==============================================================================
+build/
+out/
+bin/
+cmake-build-*/
+
+# ==============================================================================
+# CMake & Ninja Artifacts
+# ==============================================================================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+install_manifest.txt
+Makefile
+*.cmake
+!CMakeLists.txt
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+
+# ==============================================================================
+# Compiled Object Files, Binaries & Debug Symbols
+# ==============================================================================
+*.o
+*.obj
+*.lo
+*.slo
+*.ko
+*.so
+*.so.*
+*.dylib
+*.dll
+*.a
+*.la
+*.lib
+*.exe
+*.out
+*.app
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.dSYM/
+*.gch
+*.pch
+codeword
+
+# ==============================================================================
+# Codeword Generated Output
+# ==============================================================================
+Codeword/
+
+# ==============================================================================
+# IDE & Editor Directories
+# ==============================================================================
+.vscode/
+.vs/
+.idea/
+.clangd/
+.cache/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.swo
+*~
+
+# ==============================================================================
+# Operating System Files
+# ==============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
