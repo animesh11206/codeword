@@ -10,6 +10,7 @@ extern const std::string DECODING_FLAGS[];
 extern const std::string HASHING_FLAGS[];
 
 extern const int NUM_ALL_FLAGS;
+extern const int NUM_UTILITY_FLAGS;
 extern const int NUM_ENCODING_FLAGS;
 extern const int NUM_DECODING_FLAGS;
 extern const int NUM_HASHING_FLAGS;

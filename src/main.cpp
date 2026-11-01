@@ -4,8 +4,19 @@
 #include <exception>
 #include <filesystem>
 
-const std::string AUTHOR;
-const std::string VERSION;
+#include "command_validation.h"
+#include "display_help.h"
+#include "input_file_validation.h"
+#include "output_file_validation.h"
+#include "file_collision_handling.h"
+#include "output_file_creation.h"
+#include "operation_validation.h"
+#include "encoding_functions.h"
+#include "decoding_functions.h"
+#include "hashing_functions.h"
+
+const std::string AUTHOR = "Animesh Bhatia";
+const std::string VERSION = "1.0.0";
 
 const std::string ALL_FLAGS[] = {
     // Utility flags
@@ -266,3 +277,83 @@ int max_used_decoding_flags = 1;
 int max_used_hashing_flags = 5;
 int num_operation_flags_used = 0;
 
+int main(int argc, char* argv[]) {
+
+    if (argc == 2) {
+        std::string arg = argv[1];
+
+        if (arg == "-h" || arg == "--help") {
+            display_help(argv[0]);
+            return 0;
+        }
+
+        if (arg == "-v" || arg == "--version") {
+            std::cout << VERSION << '\n';
+            return 0;
+        }
+    }
+
+    if (!Command_Validation(argc, argv)) {
+        return 1;
+    }
+
+    std::string active_operation;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--encoding" || arg == "--decoding" || arg == "--hashing") {
+            active_operation = arg;
+            break;
+        }
+    }
+
+    if (output_file.empty() || output_file_creation) {
+        if (!Output_File_Creation(input_file, used_operation_flags)) {
+            return 1;
+        }
+    }
+
+    std::ifstream in_stream(input_file);
+    if (!in_stream.is_open()) {
+        std::cerr << "Error: Unable to open input file '" << input_file << "'." << std::endl;
+        return 1;
+    }
+
+    std::ofstream out_stream;
+    if (append_output) {
+        out_stream.open(output_file, std::ios::app);
+    } else {
+        out_stream.open(output_file);
+    }
+
+    if (!out_stream.is_open()) {
+        std::cerr << "Error: Unable to open output file '" << output_file << "'." << std::endl;
+        return 1;
+    }
+
+    try {
+        std::string line;
+        while (std::getline(in_stream, line)) {
+            if (!line.empty() && line.back() == '\r') {
+                line.pop_back();
+            }
+
+            std::string current = line;
+            for (int i = 0; i < num_operation_flags_used; ++i) {
+                if (active_operation == "--encoding") {
+                    current = encode(used_operation_flags[i], current);
+                } else if (active_operation == "--decoding") {
+                    current = decode(used_operation_flags[i], current);
+                } else if (active_operation == "--hashing") {
+                    current = hash(used_operation_flags[i], current);
+                }
+            }
+
+            out_stream << current << '\n';
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
