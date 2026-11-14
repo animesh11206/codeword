@@ -6,6 +6,7 @@
 ![Decoders](https://img.shields.io/badge/Decoders-36-teal?style=flat-square)
 ![Hashes](https://img.shields.io/badge/Hash%20Algorithms-49-orange?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
 **Codeword** is a fast, self-contained C++17 command-line wordlist transformation engine designed for security researchers, penetration testers, CTF competitors, and developers. It provides **36 encoding schemes**, **36 decoding schemes**, and **49 cryptographic, password, database, and checksum hashing algorithms**—all implemented from scratch in standard C++17 with **zero external library dependencies**.
 
@@ -29,6 +30,7 @@
   - [Hashing Flags (49)](#hashing-flags-49)
 - [Usage Examples](#usage-examples)
 - [Project Structure](#project-structure)
+- [License](#license)
 
 ---
 
@@ -407,12 +409,14 @@ codeword/
 │   ├── encoding_functions.h          # Umbrella header & encode() dispatcher declaration
 │   ├── decoding_functions.h          # Umbrella header & decode() dispatcher declaration
 │   ├── hashing_functions.h           # Umbrella header & hash() dispatcher declaration
+│   ├── spinner.h                     # Real-time CLI progress spinner declarations
 │   ├── encoding/                     # 34 headers for all 36 encoding functions + encoding_utils.h
 │   ├── decoding/                     # 34 headers for all 36 decoding functions + decoding_utils.h
 │   └── hashing/                      # 49 headers for all 49 hashing functions + hashing_utils.h
 ├── src/
 │   ├── main.cpp                      # Global flag tables, configuration & entry point
 │   ├── display_help.cpp              # Formatted CLI help, manual sections & version output
+│   ├── spinner.cpp                   # Smooth multi-threaded terminal loading spinner
 │   ├── command validation/
 │   │   └── command_validation.cpp    # Strict CLI parser & flag validator
 │   ├── file validation/
@@ -429,6 +433,14 @@ codeword/
 │   ├── decoding/                     # 34 self-contained C++17 decoder implementations
 │   └── hashing/                      # 49 self-contained C++17 hash implementations
 ├── CMakeLists.txt                    # Cross-platform CMake build configuration
+├── LICENSE                           # MIT License
 └── README.md
 ```
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 

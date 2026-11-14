@@ -16,7 +16,7 @@ std::string resolved_prog_name(const std::string& prog_name) {
 }
 
 std::string resolved_version() {
-    return VERSION.empty() ? "1.0.0" : VERSION;
+    return VERSION.empty() ? "1.1.0" : VERSION;
 }
 
 std::string resolved_author() {

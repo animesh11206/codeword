@@ -14,9 +14,10 @@
 #include "encoding_functions.h"
 #include "decoding_functions.h"
 #include "hashing_functions.h"
+#include "spinner.h"
 
 const std::string AUTHOR = "Animesh Bhatia";
-const std::string VERSION = "1.0.0";
+const std::string VERSION = "1.1.0";
 
 const std::string ALL_FLAGS[] = {
     // Utility flags
@@ -336,6 +337,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    Spinner spinner("Processing wordlist...");
+    spinner.start();
+
     try {
         std::string line;
         while (std::getline(in_stream, line)) {
@@ -355,8 +359,12 @@ int main(int argc, char* argv[]) {
             }
 
             out_stream << current << '\n';
+            spinner.increment();
         }
+
+        spinner.finish(output_file);
     } catch (const std::exception& e) {
+        spinner.stop();
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
